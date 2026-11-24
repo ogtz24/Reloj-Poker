@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Reloj de Torneo de Poker</title>
+  <meta name="description" content="Reloj de torneo de poker con 30 niveles, descansos, control de fichas y alertas sonoras." />
+  <meta name="theme-color" content="#090d12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Reloj Poker" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <!-- Barra superior -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">♠</div>
+        <div class="brand-meta">
+          <span class="brand-title" id="headerTournamentName">Torneo de Poker</span>
+          <span class="status-pill status-open" id="rebuyStatusPill">RECOMPRAS ABIERTAS</span>
+        </div>
+      </div>
+
+      <nav class="main-nav" role="tablist" aria-label="Vistas del torneo">
+        <button class="nav-tab active" data-tab="clock" role="tab" aria-selected="true">
+          <span class="nav-icon">⏱</span> Reloj
+        </button>
+        <button class="nav-tab" data-tab="entries" role="tab" aria-selected="false">
+          <span class="nav-icon">◎</span> Entradas y Fichas
+        </button>
+        <button class="nav-tab" data-tab="structure" role="tab" aria-selected="false">
+          <span class="nav-icon">☰</span> Estructura
+        </button>
+      </nav>
+
+      <div class="topbar-actions">
+        <div class="wall-clock" title="Hora actual">
+          <span class="wall-clock-label">HORA</span>
+          <span class="wall-clock-value" id="wallClock">--:--</span>
+        </div>
+
+        <button class="icon-btn" id="btnToggleSound" title="Activar/Silenciar sonidos (M)" aria-label="Sonido">
+          <span id="soundIcon">🔊</span>
+        </button>
+
+        <button class="icon-btn" id="btnToggleVoice" title="Activar/Desactivar anuncios por voz en español" aria-label="Voz">
+          <span id="voiceIcon">Voz</span>
+        </button>
+
+        <button class="icon-btn" id="btnTestSound" title="Probar campana de cambio de nivel" aria-label="Probar sonido">
+          🔔
+        </button>
+
+        <button class="icon-btn btn-tv" id="btnFullscreen" title="Modo TV / Pantalla Completa (F)">
+          ⛶ <span class="btn-tv-label">Modo TV</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+    <!-- VISTA 1: RELOJ PRINCIPAL -->
+    <section class="view active" id="view-clock" aria-label="Reloj del torneo">
+      <!-- Tarjetas de telemetría superior -->
+      <section class="telemetry-strip" aria-label="Resumen del torneo">
+        <div class="stat-card stat-players">
+          <div class="stat-header">
+            <span class="stat-label">JUGADORES</span>
+            <div class="quick-stepper" title="Ajustar jugadores activos">
+              <button class="mini-btn" id="btnQuickElim" title="Eliminar un jugador (-1)">−1</button>
+              <button class="mini-btn" id="btnQuickReentry" title="Agregar un jugador (+1)">+1</button>
+            </div>
+          </div>
+          <div class="stat-value">
+            <span id="clockPlayersRemaining">32</span>
+            <span class="stat-sub">/ <span id="clockTotalBuyins">32</span></span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">TOTAL FICHAS</span>
+          </div>
+          <div class="stat-value" id="clockTotalChips">6,480,000</div>
+          <div class="stat-foot" id="clockEntriesFoot">32 BI · 44 RB · 20 AO</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">STACK PROMEDIO</span>
+          </div>
+          <div class="stat-value" id="clockAvgStack">202,500</div>
+          <div class="stat-foot" id="clockAvgBB">2,025 BB</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">PRÓXIMO DESCANSO</span>
+          </div>
+          <div class="stat-value stat-value-accent" id="clockNextBreakTime">03:00:00</div>
+          <div class="stat-foot" id="clockNextBreakLabel">COMIDA (15:00)</div>
+        </div>
+      </section>
+
+      <!-- Escenario central del reloj -->
+      <section class="hero-stage" id="heroStage">
+        <div class="hero-top-row">
+          <div class="level-badge" id="levelBadge">NIVEL 1 DE 30</div>
+          <div class="schedule-time-pill" id="levelTimeWindow">12:00 – 12:20</div>
+          <div class="special-note-pill hidden" id="specialNotePill">ACABA AQUÍ</div>
+          <div class="paused-pill" id="pausedPill">PAUSADO</div>
+        </div>
+
+        <!-- Contador gigante -->
+        <div class="timer-container">
+          <div class="timer-display" id="timerDisplay" aria-live="off">20:00</div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width: 100%"></div>
+          </div>
+        </div>
+
+        <!-- Panel de Ciegas (modo nivel normal) -->
+        <div class="blinds-panel" id="blindsPanel">
+          <div class="blinds-group blinds-main">
+            <div class="blinds-caption">CIEGAS (SMALL / BIG BLIND)</div>
+            <div class="blinds-numbers">
+              <span id="currentSB">100</span>
+              <span class="blinds-slash">/</span>
+              <span id="currentBB">100</span>
+            </div>
+          </div>
+
+          <div class="blinds-divider" aria-hidden="true"></div>
+
+          <div class="blinds-group blinds-ante">
+            <div class="blinds-caption">BIG BLIND ANTE</div>
+            <div class="blinds-ante-number" id="currentAnte">—</div>
+          </div>
+        </div>
+
+        <!-- Panel de Descanso (modo COMIDA / FIN DE RECOMPRAS) -->
+        <div class="break-panel hidden" id="breakPanel">
+          <div class="break-kicker">DESCANSO EN CURSO</div>
+          <div class="break-title" id="breakTitle">COMIDA</div>
+          <div class="break-subtitle" id="breakSubtitle">Descanso para comer — Las fichas permanecen en mesa</div>
+          <div class="break-resume-info" id="breakResumeInfo">
+            Al regresar: Nivel 10 · 1,000 / 1,500 · Ante 1,500
+          </div>
+        </div>
+      </section>
+
+      <!-- Barra inferior: Siguiente nivel + Controles -->
+      <section class="bottom-dock">
+        <div class="next-level-box">
+          <div class="next-label">SIGUIENTE</div>
+          <div class="next-details" id="nextLevelDetails">
+            Nivel 2 · 100 / 200 · Ante 200
+          </div>
+          <div class="next-meta" id="nextLevelMeta">12:20 · 20 min</div>
+        </div>
+
+        <div class="transport-controls">
+          <button class="ctrl-btn" id="btnPrevLevel" title="Nivel anterior (←)">⏮</button>
+          <button class="ctrl-btn ctrl-text" id="btnMinusMin" title="Restar 1 minuto (−)">−1m</button>
+          <button class="ctrl-btn ctrl-primary" id="btnPlayPause" title="Iniciar / Pausar (Espacio)">
+            <span id="playPauseIcon">▶</span>
+            <span id="playPauseText">INICIAR</span>
+          </button>
+          <button class="ctrl-btn ctrl-text" id="btnPlusMin" title="Sumar 1 minuto (+)">+1m</button>
+          <button class="ctrl-btn" id="btnNextLevel" title="Siguiente nivel (→)">⏭</button>
+          <button class="ctrl-btn" id="btnResetLevel" title="Reiniciar reloj de este nivel (R)">↺</button>
+        </div>
+
+        <div class="elapsed-box">
+          <div class="elapsed-row">
+            <span class="elapsed-label">TRANSCURRIDO</span>
+            <span class="elapsed-value" id="elapsedTime">00:00:00</span>
+          </div>
+          <div class="shortcut-hint">Espacio: Play/Pausa · ←/→: Nivel · F: TV</div>
+        </div>
+      </section>
+    </section>
+
+    <!-- VISTA 2: ENTRADAS, FICHAS Y PREMIOS -->
+    <section class="view" id="view-entries" aria-label="Entradas y fichas">
+      <div class="view-container">
+        <div class="view-header">
+          <div>
+            <h2>Entradas, Fichas y Jugadores</h2>
+            <p class="view-subtitle">Control exacto de Buy-In, Rebuy, Doble Rebuy, Add-On y cálculo automático de fichas en juego.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-secondary" id="btnLoadPdfExample">Cargar ejemplo del PDF</button>
+            <button class="btn-secondary btn-danger-outline" id="btnZeroEntries">Poner en cero</button>
+          </div>
+        </div>
+
+        <!-- Tarjetas de resumen -->
+        <div class="entries-kpis">
+          <div class="kpi-box kpi-players">
+            <span class="kpi-label">JUGADORES ACTIVOS</span>
+            <div class="kpi-player-controls">
+              <button class="btn-round" id="btnElimPlayer" title="Eliminar jugador">−1</button>
+              <div class="kpi-big">
+                <span id="entriesPlayersRemaining">32</span>
+                <span class="kpi-muted">/ <span id="entriesTotalBuyins">32</span></span>
+              </div>
+              <button class="btn-round" id="btnAddPlayer" title="Sumar jugador activo">+1</button>
+            </div>
+            <span class="kpi-hint">Se actualiza automáticamente al cambiar Buy-Ins o eliminar jugadores</span>
+          </div>
+
+          <div class="kpi-box kpi-highlight">
+            <span class="kpi-label">TOTAL FICHAS EN JUEGO</span>
+            <div class="kpi-big kpi-gold" id="entriesTotalChips">6,480,000</div>
+            <span class="kpi-hint" id="entriesTotalCountSummary">96 registros totales</span>
+          </div>
+
+          <div class="kpi-box">
+            <span class="kpi-label">STACK PROMEDIO</span>
+            <div class="kpi-big" id="entriesAvgStack">202,500</div>
+            <span class="kpi-hint" id="entriesAvgStackBB">Equivale a 2,025 BB en el nivel actual</span>
+          </div>
+
+          <div class="kpi-box">
+            <span class="kpi-label">BOLSA DE PREMIOS (OPCIONAL)</span>
+            <div class="kpi-big kpi-emerald" id="entriesPrizePool">$0</div>
+            <span class="kpi-hint">Captura el costo ($) en la tabla para calcular premios</span>
+          </div>
+        </div>
+
+        <div class="entries-grid">
+          <!-- Tabla principal de fichas (espejo del PDF) -->
+          <div class="card-panel">
+            <div class="card-panel-head">
+              <h3>Tabla de Fichas por Concepto</h3>
+              <span class="badge-subtle">Fórmula automática</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Concepto</th>
+                    <th class="num">Fichas / Unidad</th>
+                    <th class="center">Cantidad</th>
+                    <th class="num">Total Fichas</th>
+                    <th class="num">Costo ($)</th>
+                    <th class="num">Subtotal ($)</th>
+                  </tr>
+                </thead>
+                <tbody id="entriesTableBody"></tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td colspan="2">TOTAL GENERAL</td>
+                    <td class="center" id="entriesFootQty">96</td>
+                    <td class="num gold-text" id="entriesFootChips">6,480,000</td>
+                    <td></td>
+                    <td class="num emerald-text" id="entriesFootCash">$0</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Calculadora rápida de premios -->
+          <div class="card-panel">
+            <div class="card-panel-head">
+              <h3>Reparto de Premios</h3>
+              <select id="payoutPresetSelect" class="select-input" aria-label="Esquema de premios">
+                <option value="top3">Top 3 (50 / 30 / 20%)</option>
+                <option value="top4" selected>Top 4 (45 / 25 / 18 / 12%)</option>
+                <option value="top5">Top 5 (40 / 25 / 15 / 12 / 8%)</option>
+                <option value="top6">Top 6 (36 / 22 / 15 / 11 / 9 / 7%)</option>
+              </select>
+            </div>
+            <div class="payout-list" id="payoutList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISTA 3: ESTRUCTURA DE CIEGAS Y DESCANSOS -->
+    <section class="view" id="view-structure" aria-label="Estructura de ciegas">
+      <div class="view-container">
+        <div class="view-header">
+          <div>
+            <h2>Estructura del Torneo</h2>
+            <p class="view-subtitle">30 niveles y 2 descansos configurados exactamente según tu tabla. Haz clic en cualquier nivel para saltar o edita los valores en vivo.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-secondary" id="btnAddLevel">+ Nivel</button>
+            <button class="btn-secondary" id="btnAddBreak">+ Descanso</button>
+            <button class="btn-secondary btn-danger-outline" id="btnResetTournament">Reiniciar torneo</button>
+          </div>
+        </div>
+
+        <!-- Configuración general -->
+        <div class="config-bar">
+          <label class="field-group">
+            <span>Nombre del torneo</span>
+            <input type="text" id="inputTournamentName" class="text-input" placeholder="Torneo de Poker" />
+          </label>
+          <label class="field-group">
+            <span>Hora de inicio</span>
+            <input type="time" id="inputStartTime" class="text-input" value="12:00" />
+          </label>
+          <div class="config-summary">
+            <span id="structureSummaryText">30 niveles · 2 descansos</span>
+            <button class="btn-link" id="btnRestoreDefaultSchedule">Restaurar estructura original del PDF</button>
+          </div>
+        </div>
+
+        <!-- Tabla completa de niveles -->
+        <div class="card-panel">
+          <div class="table-wrap">
+            <table class="data-table structure-table">
+              <thead>
+                <tr>
+                  <th>Round / Evento</th>
+                  <th class="num">Small Blind</th>
+                  <th class="num">Big Blind</th>
+                  <th class="num">Big Blind Ante</th>
+                  <th class="center">Tiempo (min)</th>
+                  <th class="center">Hora</th>
+                  <th>Nota</th>
+                  <th class="center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="structureTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+    </main>
+  </div>
+
+  <!-- Toast de notificación discreto -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Modal de confirmación -->
+  <div class="modal-backdrop hidden" id="confirmModal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3 id="confirmTitle">Confirmar acción</h3>
+      <p id="confirmMessage">¿Deseas continuar?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="btnConfirmCancel">Cancelar</button>
+        <button class="btn-primary-danger" id="btnConfirmOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

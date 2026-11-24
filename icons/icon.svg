@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#173026" />
+      <stop offset="65%" stop-color="#0b1117" />
+      <stop offset="100%" stop-color="#070a0f" />
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fce594" />
+      <stop offset="48%" stop-color="#e0b94b" />
+      <stop offset="100%" stop-color="#a87c18" />
+    </linearGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f5d371" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#b88a1e" stop-opacity="0.45" />
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed dark felt background -->
+  <rect width="512" height="512" fill="url(#bg)" />
+
+  <!-- Outer championship clock ring -->
+  <circle cx="256" cy="256" r="196" fill="none" stroke="url(#ring)" stroke-width="14" />
+  <circle cx="256" cy="256" r="168" fill="none" stroke="#e0b94b" stroke-opacity="0.22" stroke-width="3" stroke-dasharray="14 14" />
+
+  <!-- 4 poker-chip / clock cardinal markers -->
+  <rect x="247" y="42" width="18" height="32" rx="6" fill="url(#gold)" />
+  <rect x="247" y="438" width="18" height="32" rx="6" fill="url(#gold)" />
+  <rect x="42" y="247" width="32" height="18" rx="6" fill="url(#gold)" />
+  <rect x="438" y="247" width="32" height="18" rx="6" fill="url(#gold)" />
+
+  <!-- Centered bold gold spade -->
+  <path
+    d="M256 126
+       C256 126 154 218 154 282
+       C154 322 184 348 216 348
+       C234 348 246 339 252 329
+       C248 354 236 372 214 384
+       L298 384
+       C276 372 264 354 260 329
+       C266 339 278 348 296 348
+       C328 348 358 322 358 282
+       C358 218 256 126 256 126 Z"
+    fill="url(#gold)"
+  />
+</svg>
